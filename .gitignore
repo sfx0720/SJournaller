@@ -1,0 +1,65 @@
+# ── Python ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ─────────────────────────────────
+venv/
+.venv/
+env/
+.env/
+
+# ── PyInstaller ──────────────────────────────────────────
+*.spec.bak
+*.manifest
+*.exe
+
+# ── Generated assets ─────────────────────────────────────
+assets/icon.ico
+assets/icon.png
+assets/icon_16.png
+
+# ── Installer ────────────────────────────────────────────
+*.iss
+installer_output/
+# ── IDE / editor ─────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ── OS junk ──────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# ── Tools ────────────────────────────────────────────────
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ── Misc ─────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+
+# ── Misc ─────────────────────────────────────────────────
+
+safex/
