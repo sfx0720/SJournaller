@@ -379,6 +379,10 @@ class MainWindow(QMainWindow):
     def _on_settings(self) -> None:
         dlg = SettingsDialog(self._config, self._db, self._enc_key, self._icon, self)
         if dlg.exec() == SettingsDialog.DialogCode.Accepted:
+            # ← NEW: sync the encryption key if password was changed
+            if dlg.password_changed and dlg.new_enc_key is not None:
+                self._enc_key = dlg.new_enc_key
+
             self.editor.setFont(QFont("Segoe UI", self._config.font_size))
             if dlg.theme_changed:
                 self._apply_theme()

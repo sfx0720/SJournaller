@@ -13,14 +13,14 @@ VSVersionInfo(
     StringTable(
       '040904B0',
       [
-        StringStruct('CompanyName', 'SJournaller Team'),
+        StringStruct('CompanyName', 'SyphaxSolutions'),
         StringStruct('FileDescription', 'A secure personal journal application'),
-        StringStruct('FileVersion', '1.0.0.0'),
+        StringStruct('FileVersion', '1.0.0.1'),
         StringStruct('InternalName', 'sjournaller'),
-        StringStruct('LegalCopyright', '© 2024 SJournaller Team'),
+        StringStruct('LegalCopyright', '© 2024 Syphax @ SyphaxSolutions'),
         StringStruct('OriginalFilename', 'SJournaller.exe'),
         StringStruct('ProductName', 'SJournaller'),
-        StringStruct('ProductVersion', '1.0.0.0'),
+        StringStruct('ProductVersion', '1.0.0.1'),
       ]
     )
   ]

@@ -4,7 +4,6 @@ Application entry point — config check → login → decrypt → run → encry
 
 import sys
 import os
-import atexit
 
 from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtCore import Qt
@@ -27,8 +26,6 @@ from sjournaller.ui.setup_dialog import SetupDialog
 from sjournaller.resources.icons import create_app_icon
 
 
-# ── Default templates inserted on first run ───────────────
-
 DEFAULT_TEMPLATES = [
     (
         "Daily Reflection",
@@ -49,7 +46,6 @@ DEFAULT_TEMPLATES = [
 
 
 def _cleanup(db: Database, enc_key: bytes) -> None:
-    """Encrypt the temp DB back and delete the plaintext file."""
     db_temp = get_db_temp_path()
     db_enc = get_db_encrypted_path()
     try:
@@ -58,7 +54,6 @@ def _cleanup(db: Database, enc_key: bytes) -> None:
             encrypt_file(db_temp, db_enc, enc_key)
             os.remove(db_temp)
     except Exception as exc:
-        # Last-resort: at least warn if we can't re-encrypt
         if os.path.isfile(db_temp):
             print(f"WARNING: could not re-encrypt database: {exc}", file=sys.stderr)
             print(f"Plaintext database remains at: {db_temp}", file=sys.stderr)
@@ -77,7 +72,7 @@ def main() -> int:
     config = Config()
     password: str = ""
 
-    # ── First-run: setup ──────────────────────────────────
+    # ── First-run ─────────────────────────────────────────
     if not config.exists:
         dlg = SetupDialog(icon)
         if dlg.exec() != SetupDialog.DialogCode.Accepted:
@@ -86,7 +81,6 @@ def main() -> int:
 
         enc_salt = generate_salt()
         pw_hash, pw_salt = hash_password(password)
-
         config.create(
             password_hash=pw_hash,
             password_salt=pw_salt,
@@ -95,27 +89,23 @@ def main() -> int:
             font_size=dlg.font_size,
         )
 
-        # Create and encrypt an empty database
         db_temp = get_db_temp_path()
         db_enc = get_db_encrypted_path()
 
         db = Database(db_temp)
         db.connect()
-
-        # Seed default templates
         for name, content in DEFAULT_TEMPLATES:
             try:
                 db.add_template(name, content)
             except Exception:
                 pass
-
         db.disconnect()
 
         key = derive_key(password, enc_salt)
         encrypt_file(db_temp, db_enc, key)
         os.remove(db_temp)
 
-    # ── Returning user: login ─────────────────────────────
+    # ── Login ─────────────────────────────────────────────
     else:
         config.load()
         max_attempts = 5
@@ -124,10 +114,8 @@ def main() -> int:
             if dlg.exec() != LoginDialog.DialogCode.Accepted:
                 return 0
             password = dlg.password
-
             if verify_password(password, config.password_hash, config.password_salt):
                 break
-
             remaining = max_attempts - attempt - 1
             QMessageBox.warning(
                 None, "Authentication Failed",
@@ -137,11 +125,10 @@ def main() -> int:
             QMessageBox.critical(None, "Access Denied", "Maximum login attempts exceeded.")
             return 1
 
-    # ── Decrypt database ───────────────────────────────────
+    # ── Decrypt ───────────────────────────────────────────
     db_enc = get_db_encrypted_path()
     db_temp = get_db_temp_path()
 
-    # Safety: remove stale temp file from a previous crash
     if os.path.isfile(db_temp):
         try:
             os.remove(db_temp)
@@ -164,24 +151,20 @@ def main() -> int:
     db = Database(db_temp)
     db.connect()
 
-    # Register cleanup
-    atexit.register(_cleanup, db, key)
-
-    # ── Apply theme ────────────────────────────────────────
+    # ── Theme ─────────────────────────────────────────────
     if config.theme == "dark":
         app.setStyleSheet(DARK_STYLESHEET)
     else:
         app.setStyleSheet(LIGHT_STYLESHEET)
 
-    # ── Run ────────────────────────────────────────────────
+    # ── Run ───────────────────────────────────────────────
     window = MainWindow(config, db, key, icon)
     window.show()
 
     ret = app.exec()
 
-    # ── Cleanup ────────────────────────────────────────────
-    _cleanup(db, key)
-    atexit.unregister(_cleanup)
+    # ── Cleanup — use LIVE key from window ────────────────
+    _cleanup(db, window._enc_key)
 
     return ret
 

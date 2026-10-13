@@ -26,6 +26,8 @@ class SettingsDialog(QDialog):
         self._enc_key = enc_key
         self._icon = icon
         self.theme_changed = False
+        self.password_changed = False          # ← NEW
+        self.new_enc_key: bytes | None = None  # ← NEW
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -76,7 +78,7 @@ class SettingsDialog(QDialog):
         self.export_dir_input = QLineEdit()
         self.export_dir_input.setText(self._config.export_dir or os.path.expanduser("~"))
         ex_form.addRow("Default directory:", self.export_dir_input)
-        browse_btn = QPushButton("Browse…")
+        browse_btn = QPushButton("Browse...")
         browse_btn.setObjectName("secondary")
         browse_btn.clicked.connect(self._on_browse_export)
         ex_form.addRow("", browse_btn)
@@ -162,8 +164,9 @@ class SettingsDialog(QDialog):
                 self._config._data["encryption_salt"] = new_salt.hex()
                 self._config.save()
 
-                # Update the live key reference
-                self._enc_key = new_key
+                # ← NEW: expose the new key so MainWindow can pick it up
+                self.new_enc_key = new_key
+                self.password_changed = True
 
                 QMessageBox.information(self, "Success", "Password changed successfully.")
             except Exception as e:
@@ -173,7 +176,7 @@ class SettingsDialog(QDialog):
         # Save other settings
         old_theme = self._config.theme
         self._config.theme = "dark" if self.theme_combo.currentIndex() == 0 else "light"
-        self.theme_changed = (self._config.theme != old_theme)
+        self.theme_changed = self._config.theme != old_theme
         self._config.font_size = self.font_spin.value()
         self._config.auto_save_interval = self.autosave_spin.value()
         self._config.export_dir = self.export_dir_input.text().strip()
